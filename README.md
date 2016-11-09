@@ -10,24 +10,38 @@ Methods
 -------
 
 `set`
+
 `get`
+
 `delete`
+
 `has`
+
 `forEach`
+
 `reduce`
+
 `reduceRight`
+
 `map`
+
 `filter`
+
 `keys`
+
 `values`
+
 `entries`
+
 `toMap`
+
 `setMap`
 
 Properties
 ----------
 
 `size`
+
 `Nil`
 
 Static methods
@@ -37,7 +51,7 @@ Static methods
 
 Benchmark
 ---------
-Simple benchmark included in `test.js`. First we add 1 to N keys and after that we delete theese keys. The results for node 7.0.0 on iMac Core i5 2.9 GHz, 32 Gm RAM are:
+Simple benchmark included in `test.js`. First we add 1 to N keys and after that we delete these keys. The results for node 7.0.0 on iMac Core i5 2.9 GHz, 32 Gm RAM are:
 
 ### Set
 
