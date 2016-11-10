@@ -185,20 +185,27 @@ class Paat {
 	}
 
 	filter( p ) {
-		if ( this.isNil()) {
-			return this
-		} else {
-			const {k, v, l, r, lvl} = this
-			if ( !p( v, k )) {
-				return this.delete( k ).filter( p )
-			} else {
-				return new Paat( k, v, l.filter( p ), r.filter( p ), lvl )
+		let result = Paat.Nil;
+
+		this.forEach( (v,k) => {
+			if ( p(v,k)) {
+				result = result.set( k, v )
 			}
-		}
+		} )
+
+		return result
+	}
+
+	count( p ) {
+		let n = 0;
+		this.forEach( (v,k) => {
+			if( p( v, k )) n++
+		})
+		return n;
 	}
 
 	get size() {
-		return this.reduce( (acc) => acc + 1, 0 )
+		return this.count( () => true )
 	}
 
 	keys() {
@@ -237,7 +244,7 @@ class Paat {
 
 	setMap( map ) {
 		let result = this
-		map.forEach( (k, v) => {
+		map.forEach( (v, k) => {
 			if ( k instanceof Map ) {
 				k = Paat.Nil.setMap( k )
 			}

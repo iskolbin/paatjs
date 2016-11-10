@@ -33,6 +33,22 @@ for ( N of NS) {
 		}
 	}, N ))
 
+	console.log( "Setting to undefined paat", timeof( () => {
+		for ( let i = 0; i < N; i++ ) {
+			paat = paat.set( i, undefined )
+		}
+	}, N ))
+
+	console.log()
+}
+
+for ( N of NS ) {
+	let paat = Paat.Nil
+	for ( let i = 0; i < N; i++ ) {
+		paat = paat.set( i, i );
+	}
+
+	console.log( "N: ", N )
 	console.log( "Deleting from paat", timeof( () => {
 		for ( let i = 0; i < N; i++ ) {
 			paat = paat.delete( i )
