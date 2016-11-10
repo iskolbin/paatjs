@@ -37,6 +37,8 @@ Methods
 
 `setMap`
 
+`count`
+
 Properties
 ----------
 
@@ -80,5 +82,7 @@ N        | ds   | op/s    | time(s)
          | Paat | FAIL    | FAIL
 
 As we see `Map` implemented as hash-table outperforms in terms of raw performance persistent AA tree as expected. `Map.set` is roughly 5 times faster than `Paat.set` for our data sets. Delete operation for `Map` is actually faster than set. For `Paat` delete is performance killer, and for 1e7 elements I've got "Maximum call stack size exceeded" error. Hash tables have O(1) set and delete operations while `Paat`( and other binary trees ) have O(logn) complexity. Mutable `Map` has much less memory allocations during operations, which is especially noteable on delete ops. `Map` delete is O(1) amortized and no memory cost, while `Paat` needs to create new tree on each delete.
+
+As a workaround one could virtually delete by setting to undefined. In this case `get` of non-existent element returns the same as element with key => undefined. Note that `has` will work as expected -- since you are not deleting the entry it will return `true`. After that you can sometimes `filter` your tree if number of virtually deleted entries are high.
 
 Note that this comparsion is very basic and in many ways compares apples to oranges. `Paat` structures are sorted and persistent while `Map` structures are not.
