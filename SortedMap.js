@@ -1,4 +1,12 @@
+const hasEqualMethod = (obj) => Object.prototype.hasOwnProperty( obj, 'equal' )
+
+const hasToJSMethod = (obj) => Object.prototype.hasOwnProperty( obj, 'toJS' )
+
 class SortedMap {
+	static isSortedMap( v ) {
+		return v instanceof SortedMap
+	}
+
 	constructor( k, v, l, r, lvl ) {
 		this.k = k
 		this.v = v
@@ -231,11 +239,11 @@ class SortedMap {
 
 	toJS() {
 		return this.reduce( (acc, v, k ) => {
-			if ( k instanceof SortedMap ) {
-				k = k.toMap()
+			if ( hasToJSMethod( k )) {
+				k = k.toJS()
 			}
-			if ( v instanceof SortedMap ) {
-				v = v.toMap()
+			if ( hasToJSMethod( v )) {
+				v = v.toJS()
 			}
 			acc.set( k, v )
 			return acc
@@ -256,8 +264,44 @@ class SortedMap {
 		return result
 	}
 
-	static fromMap( map ) {
-		return SortedMap.Nil.setMap( map )
+	static fromJS( jsobj ) {
+		let result = SortedMap.Nil
+		if ( jsobj instanceof Map ) {
+			result = result.setMap( map )
+		} else if ( jsobj instanceof Array ) {
+			for ( let [k,v] of jsobj ) {
+				result = result.set( k, v )
+			}
+		} else if ( jsobj instanceof Object ) {
+			for ( let k in jsobj ) {
+				result = result.set( k, jsobj[k] )
+			}
+		}
+		return result
+	}
+
+	static equalMaps( map1, map2 ) {
+		const size1 = map1.size
+		const size2 = map2.size
+		if ( size1 === size2 ) {
+			for ( let [k,v1] of map1.entries()) {
+				const v2 = map2.get( k )
+				if ( hasEqualMethod( v1 ) && hasEqualMethod( v2 )) {
+					if ( !v1.equal( v2 )) {
+						return false
+					}
+				} else if ( v1 !== v2 ) {
+					return false
+				}
+			}
+			return true
+		} else {
+			return false
+		}
+	}
+
+	equal( map ) {
+		return SortedMap.equalMaps( this, map )
 	}
 }
 
