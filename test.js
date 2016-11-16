@@ -1,4 +1,4 @@
-const Paat = require('./Paat.js')
+const SortedMap = require('./SortedMap.js')
 
 const NS = [1000, 10000, 100000, 1000000, 10000000]
 
@@ -11,7 +11,7 @@ const timeof = ( f, n ) => {
 
 for ( N of NS) {
 	const map = new Map()
-	let paat = Paat.Nil
+	let paat = SortedMap.Nil
 
 	console.log( "N: ", N )
 
@@ -43,7 +43,7 @@ for ( N of NS) {
 }
 
 for ( N of NS ) {
-	let paat = Paat.Nil
+	let paat = SortedMap.Nil
 	for ( let i = 0; i < N; i++ ) {
 		paat = paat.set( i, i );
 	}
