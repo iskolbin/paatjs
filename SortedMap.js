@@ -2,6 +2,95 @@ const hasEqualMethod = (obj) => Object.prototype.hasOwnProperty( obj, 'equal' )
 
 const hasToJSMethod = (obj) => Object.prototype.hasOwnProperty( obj, 'toJS' )
 
+const skew = (self) => {
+	if ( !self.isNil()) {
+		const {k, v, l, r, lvl} = self
+		const {k: lk, v: lv, l: ll, r: lr, lvl: llvl} = l
+		if ( !l.isNil() && lvl === llvl ) {
+			const rr = new SortedMap( k, v, lr, r, lvl )
+			return new SortedMap( lk, lv, ll, rr, lvl )
+		}
+	}
+	return self
+}
+
+const split = (self) => {
+	if ( !self.isNil()) {
+		const {k, v, l, r, lvl} = self
+		if ( !r.isNil()) {
+			const {k: rk, v: rv, l: rl, r: rr, lvl: rlvl} = r
+			const {lvl: rrlvl} = rr
+			if ( !rr.isNil() && lvl === rrlvl ) {
+				const ll = new SortedMap( k, v, l, rl, lvl )
+				return new SortedMap( rk, rv, ll, rr, lvl + 1 )
+			}
+		}
+	}
+	return self
+}
+
+const setBalance = (self) => skew( split( self ))
+
+const getNode = ( self, getk ) => {
+	if ( self.isNil() ) {
+		return self
+	} else {
+		const {k, l, r} = self
+		if ( getk === k ) {
+			return self
+		} else if ( getk < k ) {
+			return getNode( l, getk )
+		} else {
+			return getNode( r, getk )
+		}
+	}
+}
+
+const decreaseLevel = (self) => {
+	const {k, v, r, l, lvl} = self
+	const {l: {lvl: llvl}, r: {lvl: rlvl}} = self
+	const shouldBe = ( llvl < rlvl + 1 ) ? llvl : rlvl + 1
+	if ( shouldBe < lvl ) {
+		return new SortedMap( k, v, l, r, shouldBe )
+	} else if ( shouldBe < rlvl ) {
+		const {k: rk, v: rv, l: rl, r: rr} = r
+		return new SortedMap( k, v, l, new SortedMap( rk, rv, rl, rr, shouldBe ), lvl )
+	} else {
+		return self
+	}
+}
+
+const deleteBalance = (self) => {
+	const {k,v,l,r,lvl} = skew( decreaseLevel( self ))
+	const paat2	= new SortedMap( k, v, l, skew( r ), lvl )
+	const {k: k2, v: v2, l: l2, r: r2, lvl: lvl2} = paat2
+	if ( !r2.isNil() ) {
+		const {k: k3, v: v3, l: l3, r: r3, lvl: lvl3} = r2
+		const rnode = new SortedMap( k3, v3, l3, skew( r3 ), lvl3 )
+		const {k: k4, v: v4, l: l4, r: r4, lvl: lvl4} = split( new SortedMap( k2, v2, l2, rnode, lvl2 ))
+		return new SortedMap( k4, v4, l4, split( r4 ), lvl4 )
+	} else {
+		const {k: k4, v: v4, l: l4, r: r4, lvl: lvl4} = split( paat2 )
+		return new SortedMap( k4, v4, l4, split( r4 ), lvl4 )	
+	}
+}
+
+const predecessor = (self) => {
+	let pred = self.l
+	while ( !pred.r.isNil() ) {
+		pred = pred.r
+	}
+	return pred
+}
+
+const successor = (self) => {
+	let succ = self.r
+	while ( !succ.l.isNil()) {
+		succ = succ.l
+	}
+	return succ
+}
+
 class SortedMap {
 	static isSortedMap( v ) {
 		return v instanceof SortedMap
@@ -19,60 +108,14 @@ class SortedMap {
 		return this === SortedMap.Nil
 	}
 
-	skew() {
-		if ( !this.isNil()) {
-			const {k, v, l, r, lvl} = this
-			const {k: lk, v: lv, l: ll, r: lr, lvl: llvl} = l
-			if ( !l.isNil() && lvl === llvl ) {
-				const rr = new SortedMap( k, v, lr, r, lvl )
-				return new SortedMap( lk, lv, ll, rr, lvl )
-			}
-		}
-		return this
+	get( k ) {
+		return getNode( this, k ).v
 	}
 
-	split() {
-		if ( !this.isNil()) {
-			const {k, v, l, r, lvl} = this
-			if ( !r.isNil()) {
-				const {k: rk, v: rv, l: rl, r: rr, lvl: rlvl} = r
-				const {lvl: rrlvl} = rr
-				if ( !rr.isNil() && lvl === rrlvl ) {
-					const ll = new SortedMap( k, v, l, rl, lvl )
-					return new SortedMap( rk, rv, ll, rr, lvl + 1 )
-				}
-			}
-		}
-		return this
+	has( k ) {
+		return !getNode( this, k ).isNil()
 	}
-
-	setBalance() {
-		return this.skew().split()
-	}
-
-	getNode( getk ) {
-		if ( this.isNil() ) {
-			return this
-		} else {
-			const {k, l, r} = this
-			if ( getk === k ) {
-				return this
-			} else if ( getk < k ) {
-				return l.getNode( getk )
-			} else {
-				return r.getNode( getk )
-			}
-		}
-	}
-
-	get( getk ) {
-		return this.getNode( getk ).v
-	}
-
-	has( getk ) {
-		return !this.getNode( getk ).isNil()
-	}
-
+	
 	set( newk, newv ) {
 		if ( this.isNil()) {
 			return new SortedMap( newk, newv, this, this, 1 )
@@ -81,58 +124,13 @@ class SortedMap {
 			if ( newk === k ) {
 				return new SortedMap( newk, newv, l, r, lvl )
 			} else if ( newk < k ) {
-				return new SortedMap( k, v, l.set( newk, newv ), r, lvl ).setBalance()
+				return setBalance( new SortedMap( k, v, l.set( newk, newv ), r, lvl ))
 			} else {
-				return new SortedMap( k, v, l, r.set( newk, newv ), lvl ).setBalance()
+				return setBalance( new SortedMap( k, v, l, r.set( newk, newv ), lvl ))
 			}
 		}
 	}
-
-	decreaseLevel() {
-		const {k, v, r, l, lvl} = this
-		const {l: {lvl: llvl}, r: {lvl: rlvl}} = this
-		const shouldBe = ( llvl < rlvl + 1 ) ? llvl : rlvl + 1
-		if ( shouldBe < lvl ) {
-			return new SortedMap( k, v, l, r, shouldBe )
-		} else if ( shouldBe < rlvl ) {
-			const {k: rk, v: rv, l: rl, r: rr} = r
-			return new SortedMap( k, v, l, new SortedMap( rk, rv, rl, rr, shouldBe ), lvl )
-		} else {
-			return this
-		}
-	}
-
-	deleteBalance() {
-		const {k,v,l,r,lvl} = this.decreaseLevel().skew()
-		const paat2	= new SortedMap( k, v, l, r.skew(), lvl )
-		const {k: k2,v: v2,l: l2,r: r2,lvl: lvl2} = paat2
-		if ( !r2.isNil() ) {
-			const {k: k3,v: v3,l: l3,r: r3,lvl: lvl3} = r2
-			const rnode = new SortedMap( k3, v3, l3, r3.skew(), lvl3 )
-			const {k: k4,v: v4,l: l4,r: r4,lvl: lvl4} = new SortedMap( k2, v2, l2, rnode, lvl2 ).split()
-			return new SortedMap( k4, v4, l4, r4.split(), lvl4 )
-		} else {
-			const {k: k4,v: v4,l: l4,r: r4,lvl: lvl4} = paat2.split()
-			return new SortedMap( k4, v4, l4, r4.split(), lvl4 )	
-		}
-	}
-
-	predecessor() {
-		let pred = this.l
-		while ( !pred.r.isNil() ) {
-			pred = pred.r
-		}
-		return pred
-	}
-
-	successor() {
-		let succ = this.r
-		while ( !succ.l.isNil()) {
-			succ = succ.l
-		}
-		return succ
-	}
-
+	
 	delete( delk ) {
 		if ( this.isNil() ) {
 			return this
@@ -142,16 +140,16 @@ class SortedMap {
 				if ( l.isNil() && r.isNil()) {
 					return l
 				} else if ( l.isNil()) {
-					const {k: sk, v: sv} = this.successor()
+					const {k: sk, v: sv} = successor( this )
 					return new SortedMap( sk, sv, l, r.delete( sk ), lvl )
 				} else {
-					const {k: pk, v: pv} = this.predecessor()
+					const {k: pk, v: pv} = predecessor( this )
 					return new SortedMap( pk, pv, l.delete( pk ), r, lvl )
 				}
 			} else if ( delk < k ) {
-				return new SortedMap( k, v, l.delete( delk ), r, lvl ).deleteBalance()
+				return deleteBalance( new SortedMap( k, v, l.delete( delk ), r, lvl ))
 			} else {
-				return new SortedMap( k, v, l, r.delete( delk ), lvl ).deleteBalance()
+				return deleteBalance( new SortedMap( k, v, l, r.delete( delk ), lvl ))
 			}
 		}
 	}
